@@ -1,4 +1,4 @@
-# -AutomaticFilling
+# AutomaticFilling
 实现自动打卡，不用每天都打卡一次。
 
 * schedule实现低耗的定期执行任务
