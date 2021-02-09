@@ -1,6 +1,15 @@
+import schedule
+import time
+from urllib.request import urlopen
+from urllib.parse import urlencode
+
+import smtplib
+from email.mime.text import MIMEText
+from email.utils import formataddr
+
 class Poster():
     
-    # post数据，wid可能是微信ID，其余数据为表单数据
+    # post数据，wid可能是固定校验字段，其余数据为表单数据
     dataList = [{'wid':'','userId':'',
                'DATETIME_CYCLE':'','DWMC_698799':'',
                'XGH_273694':'','XM_941836':'',
@@ -23,11 +32,24 @@ class Poster():
 
             s = urlencode(data)
             res = urlopen(url,s.encode()).read().decode('utf-8')
-            # 这里可以针对填报失败做出通知处理，如发邮件等。
+            # 判断是否填报成功，填报失败则发送邮件提醒。
+            curdate = time.strftime("%Y/%m/%d %H:%M", time.localtime())
             if('true' in res):
-                print(data['XM_941836'], "填报成功")
+                print(curdate, data['XM_941836'], "填报成功")
             else:
-                print('warning:', data['XM_941836'], "填报失败")
+                print('warning:',curdate, data['XM_941836'], "填报失败")
+                sendEmail('{} 填报失败 请及时处理'.format(data['XM_941836']))
+                
+    def sendEmail(message, self):
+        msg = MIMEText(message, 'plain', 'utf-8')  # 发送内容
+        msg['From'] = formataddr(['自动填报系统','******@163.com'])  # 发件人
+        msg['To'] = formataddr(['','******@qq.com'])  # 收件人
+        msg['Subject'] = "自动填报系统"  # 主题
+
+        server = smtplib.SMTP("smtp.163.com", 25) # SMTP服务
+        server.login("******@163.com", '******') # 邮箱用户名和密码  把密码改成授权码就行了
+        server.sendmail('******@163.com', ['******@qq.com'], msg.as_string()) # 发送者和接收者
+        server.quit()
             
         
     def run(self, posttime='08:00'):
@@ -38,4 +60,5 @@ class Poster():
             time.sleep(1)
 
 if __name__=="__main__":
+    # 启动填报程序，posttime为填报时间，默认为早上八点~
     Poster().run(posttime="08:00")
